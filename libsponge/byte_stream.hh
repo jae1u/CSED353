@@ -10,14 +10,16 @@
 //! and then no more bytes can be written.
 class ByteStream {
   private:
-    // Your code here -- add private members as necessary.
+    std::string _stream{};
+    size_t _capacity;
+    size_t _written{};  //!< Counter indicating that the number of written bytes.
+    size_t _popped{};   //!< Counter indicating that the number of popped bytes.
+    bool _eof{};        //!< Flag indicating that the stream input ended.
+    bool _error{};      //!< Flag indicating that the stream suffered an error.
 
-    // Hint: This doesn't need to be a sophisticated data structure at
-    // all, but if any of your tests are taking longer than a second,
-    // that's a sign that you probably want to keep exploring
-    // different approaches.
-
-    bool _error{};  //!< Flag indicating that the stream suffered an error.
+    //! Return the smaller number.
+    size_t _min(const size_t num1, const size_t num2) const;
+    //!@}
 
   public:
     //! Construct a stream with room for `capacity` bytes.
