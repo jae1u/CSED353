@@ -18,14 +18,14 @@ WrappingInt32 wrap(uint64_t n, WrappingInt32 isn) { return WrappingInt32(n) + is
 //! and the other stream runs from the remote TCPSender to the local TCPReceiver and
 //! has a different ISN.
 uint64_t unwrap(WrappingInt32 n, WrappingInt32 isn, uint64_t checkpoint) {
-    uint64_t pow_2_32 = 1ul << 32;
-    uint64_t abs_seqno_mod_32 = (n - isn) & 0xffffffff;
+    const uint64_t pow_2_32 = 1ul << 32;
+    const uint64_t abs_seqno_mod_32 = (n - isn) & 0xffffffff;
 
     if (checkpoint < static_cast<uint64_t>(abs_seqno_mod_32))
         return abs_seqno_mod_32;
 
-    uint64_t block_offset = (checkpoint - abs_seqno_mod_32) / pow_2_32 * pow_2_32;
-    uint64_t lower = abs_seqno_mod_32 + block_offset;
-    uint64_t higher = abs_seqno_mod_32 + block_offset + pow_2_32;
+    const uint64_t block_offset = (checkpoint - abs_seqno_mod_32) / pow_2_32 * pow_2_32;
+    const uint64_t lower = abs_seqno_mod_32 + block_offset;
+    const uint64_t higher = abs_seqno_mod_32 + block_offset + pow_2_32;
     return (higher - checkpoint) <= (1ul << 31) ? higher : lower;
 }
