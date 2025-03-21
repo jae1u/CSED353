@@ -3,7 +3,7 @@
 using namespace std;
 
 void TCPReceiver::segment_received(const TCPSegment &seg) {
-    if (!_isn && seg.header().syn) {
+    if (seg.header().syn) {
         _isn = seg.header().seqno;
     }
 
