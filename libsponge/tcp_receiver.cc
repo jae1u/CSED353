@@ -1,19 +1,25 @@
 #include "tcp_receiver.hh"
 
-// Dummy implementation of a TCP receiver
-
-// For Lab 2, please replace with a real implementation that passes the
-// automated checks run by `make check_lab2`.
-
-template <typename... Targs>
-void DUMMY_CODE(Targs &&... /* unused */) {}
-
 using namespace std;
 
 void TCPReceiver::segment_received(const TCPSegment &seg) {
-    DUMMY_CODE(seg);
+    if (!_isn && seg.header().syn) {
+        _isn = seg.header().seqno;
+    }
+
+    if (_isn) {
+        const auto absolute_sequence_number = unwrap(seg.header().seqno, *_isn, _checkpoint);
+        const auto push_index = absolute_sequence_number - !seg.header().syn;
+        _reassembler.push_substring(move(seg.payload().copy()), push_index, seg.header().fin);
+        _checkpoint = absolute_sequence_number;
+    }
 }
 
-optional<WrappingInt32> TCPReceiver::ackno() const { return {}; }
+optional<WrappingInt32> TCPReceiver::ackno() const {
+    if (_isn) {
+        return wrap(1 + stream_out().bytes_written() + static_cast<size_t>(stream_out().input_ended()), *_isn);
+    }
+    return nullopt;
+}
 
-size_t TCPReceiver::window_size() const { return {}; }
+size_t TCPReceiver::window_size() const { return _reassembler.stream_out().remaining_capacity(); }
