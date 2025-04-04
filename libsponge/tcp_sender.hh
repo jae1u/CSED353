@@ -9,6 +9,35 @@
 #include <functional>
 #include <queue>
 
+class timer {
+  private:
+    unsigned int _irto;
+    unsigned int _rto;
+    unsigned int _consecutive_retransmissions{0};
+    size_t _elapsed_time{0};
+    bool _started{false};
+
+  public:
+    timer(unsigned int irto) : _irto(irto), _rto(irto){};
+    void tock(const size_t ms_since_last_tick) { _elapsed_time += ms_since_last_tick; };
+    void start() {
+        _started = true;
+        _elapsed_time = 0;
+    };
+    void stop() {
+        _started = false;
+        _rto = _irto;
+        _consecutive_retransmissions = 0;
+    };
+    void handle_retransmission() {
+        _rto *= 2;
+        _consecutive_retransmissions++;
+    }
+    bool is_expired() const { return _rto <= _elapsed_time; };
+    bool is_started() const { return _started; }
+    unsigned int consecutive_retransmissions() const { return _consecutive_retransmissions; }
+};
+
 //! \brief The "sender" part of a TCP implementation.
 
 //! Accepts a ByteStream, divides it up into segments and sends the
@@ -31,6 +60,12 @@ class TCPSender {
 
     //! the (absolute) sequence number for the next byte to be sent
     uint64_t _next_seqno{0};
+
+    std::queue<TCPSegment> _segments_outstand{};
+    uint16_t _window_size{1};
+    uint64_t _ackno{0};
+    timer _timer;
+    void send_segment(TCPSegment &segment);
 
   public:
     //! Initialize a TCPSender
