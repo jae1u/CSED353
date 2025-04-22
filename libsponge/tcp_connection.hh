@@ -21,6 +21,10 @@ class TCPConnection {
     //! in case the remote TCPConnection doesn't know we've received its whole stream?
     bool _linger_after_streams_finish{true};
 
+    size_t _tick{0};
+    bool _is_disconnected{false};
+    void send_segments(const bool rst = false);
+
   public:
     //! \name "Input" interface for the writer
     //!@{

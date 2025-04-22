@@ -9,6 +9,9 @@ void TCPReceiver::segment_received(const TCPSegment &seg) {
 
     if (_isn) {
         const auto absolute_sequence_number = unwrap(seg.header().seqno, *_isn, _checkpoint);
+        if (absolute_sequence_number == 0 && !seg.header().syn) {
+            return;
+        }
         const auto push_index = absolute_sequence_number - !seg.header().syn;
         _reassembler.push_substring(move(seg.payload().copy()), push_index, seg.header().fin);
         _checkpoint = absolute_sequence_number;
