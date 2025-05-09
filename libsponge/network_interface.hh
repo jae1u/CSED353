@@ -5,6 +5,7 @@
 #include "tcp_over_ip.hh"
 #include "tun.hh"
 
+#include <map>
 #include <optional>
 #include <queue>
 
@@ -29,6 +30,32 @@
 //! the network interface passes it up the stack. If it's an ARP
 //! request or reply, the network interface processes the frame
 //! and learns or replies as necessary.
+
+class Mapping {
+  private:
+    std::optional<EthernetAddress> _ethernet_address{};
+    size_t _last_update_time{};
+    const size_t _ttl{30000};
+
+  public:
+    Mapping() = default;
+    Mapping(const std::optional<EthernetAddress> &ethernet_address, const size_t last_update_time)
+        : _ethernet_address(ethernet_address), _last_update_time(last_update_time) {}
+    const EthernetAddress &ethernet_address() const { return *_ethernet_address; }
+    bool is_valid(const size_t current_time) const {
+        const size_t age = current_time - _last_update_time;
+        return _ethernet_address && (age < _ttl);
+    }
+    void update(const std::optional<EthernetAddress> &ethernet_address, const size_t current_time) {
+        _ethernet_address = ethernet_address;
+        _last_update_time = current_time;
+    }
+    bool is_need_update(const size_t current_time) const {
+        const size_t age = current_time - _last_update_time;
+        return (!_ethernet_address && (age >= 5000)) || (_ethernet_address && (age >= _ttl));
+    }
+};
+
 class NetworkInterface {
   private:
     //! Ethernet (known as hardware, network-access-layer, or link-layer) address of the interface
@@ -39,6 +66,13 @@ class NetworkInterface {
 
     //! outbound queue of Ethernet frames that the NetworkInterface wants sent
     std::queue<EthernetFrame> _frames_out{};
+
+    size_t _time{};
+    std::map<uint32_t, Mapping> _mapping_table{};
+    std::map<uint32_t, std::queue<EthernetFrame>> _frames_queue{};
+    void cache_mapping(const uint32_t ip, const EthernetAddress &ethernet);
+    void send_arp_reply(const uint32_t ip, const EthernetAddress &ethernet);
+    void send_arp_request(const uint32_t next_hop_ip);
 
   public:
     //! \brief Construct a network interface with given Ethernet (network-access-layer) and IP (internet-layer) addresses
