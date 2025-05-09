@@ -1,4 +1,4 @@
-#include "socket.hh"
+#include "tcp_sponge_socket.hh"
 #include "util.hh"
 
 #include <cstdlib>
@@ -8,7 +8,7 @@ using namespace std;
 
 void get_URL(const string &host, const string &path) {
     // make TCP connection
-    TCPSocket sock;
+    FullStackSocket sock;
     sock.connect(Address(host, "http"));
     // send GET request
     sock.write("GET " + path + " HTTP/1.1\r\n");
@@ -21,6 +21,7 @@ void get_URL(const string &host, const string &path) {
     }
 
     cerr << "Function called: get_URL(" << host << ", " << path << ").\n";
+    sock.wait_until_closed();
 }
 
 int main(int argc, char *argv[]) {
