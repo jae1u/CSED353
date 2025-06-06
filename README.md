@@ -2,6 +2,34 @@ For build prereqs, see [the VM setup instructions](http://tomahawk.postech.ac.kr
 
 ## Sponge quickstart
 
+Command to modify git origin:
+
+    $ git remote remove origin
+    $ git remote add origin https://github.com/POSTECH-HIS/sponge
+    $ git fetch
+    $ git merge origin/labn-startercode
+    $ git remote remove origin
+    $ git remote add origin git@github.com:jae1u/CSED353.git
+    $ git fetch
+    $ git push --set-upstream origin master
+
+How to set up a VM:
+
+    $ VBoxManage import ./cs144_vm.ova --vsys 0 --vmname csed353 --memory 4096 --cpus 4
+    $ VBoxManage modifyvm csed353 --nat-pf1 delete ssh_forwarding_rule
+    $ VBoxManage modifyvm csed353 --nat-pf1 "ssh_forwarding_rule, tcp, 0.0.0.0, 2222, , 22"
+    $ VBoxManage startvm --type headless csed353
+
+How to delete a VM:
+
+    $ VBoxManage controlvm csed353 poweroff
+    $ VBoxManage unregistervm csed353 --delete-all
+
+Useful command:
+
+    $ VBoxManage list vms
+    $ VBoxManage list runningvms
+
 To set up your build directory:
 
 	$ mkdir -p <path/to/sponge>/build
